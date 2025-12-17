@@ -1,0 +1,121 @@
+services:
+  # ----------------------------------------------------
+  # A. APPLICATION SERVICES (จาก services.compose.yml)
+  # ----------------------------------------------------
+  
+  # 1. Database (MySQL)
+  database:
+    image: mysql:8.0
+    container_name: database
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: int531
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # 2. Backend Service (Kotlin)
+  backend:
+    image: ghcr.io/gkg0139/int531-backend:latest
+    container_name: backend
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      DB_HOST: database
+      DB_PORT: 3306 # พอร์ต MySQL
+      DB_NAME: int531
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app-network
+      # เพิ่มการเชื่อมต่อเข้า network มอนิเตอร์ เพื่อให้ Prometheus เก็บ Metric ได้
+      - monitoring 
+
+  # 3. Frontend Service (NEW: เพิ่มเข้ามาตามคำขอ)
+  frontend:
+    # สมมติว่าใช้ build จากโฟลเดอร์ frontend ที่เราสร้างไว้
+    build: ./frontend 
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      # ให้รันที่พอร์ต 3000 ของเครื่องโฮสต์
+      - "3000:80" 
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # ----------------------------------------------------
+  # B. MONITORING SERVICES (จาก monitoring.compose.yml)
+  # ----------------------------------------------------
+
+  # 4. Prometheus
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    # ควรใช้ networks เพื่อเชื่อมต่อกับ backend แทน extra_hosts 
+    # (แต่คง extra_hosts ไว้ถ้าจำเป็นสำหรับเครื่องโฮสต์)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+      - app-network # เชื่อมต่อ app-network เพื่อเก็บ metrics จาก backend
+
+  # 5. Grafana
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_PLUGINS_PREINSTALL=grafana-clock-panel
+    ports:
+      - "3001:3000" # เปลี่ยนพอร์ตของ Grafana เป็น 3001 เพื่อไม่ให้ซ้ำกับ Frontend (3000)
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+
+# ----------------------------------------------------
+# C. NETWORKS (การรวมเครือข่ายที่ซ้ำกันเข้าด้วยกัน)
+# ----------------------------------------------------
+networks:
+  # 1. เครือข่ายหลักสำหรับ Application (backend, database, frontend)
+  app-network:
+    driver: bridge
+    # internal: true (ถ้าคุณต้องการจำกัดการเข้าถึงจากภายนอก)
+    # ลบ external: true ออกไปถ้าคุณต้องการให้ Docker Compose สร้างเครือข่ายนี้
+
+  # 2. เครือข่ายสำหรับ Monitoring Stack (Prometheus, Grafana, Node Exporter-ถ้ามี)
+  monitoring:
+    driver: bridge
+
+# ----------------------------------------------------
+# D. VOLUMES (การรวม Volumes ที่ซ้ำกันเข้าด้วยกัน)
+# ----------------------------------------------------
+volumes:
+  db_data:
+    driver: local
+  grafana_data:
+    driver: local
