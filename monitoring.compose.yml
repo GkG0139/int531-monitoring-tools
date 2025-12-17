@@ -58,19 +58,21 @@ services:
       - monitoring
 
   # Node Exporter - Host System Metrics (CPU, RAM, Disk)
+  # Note: Running without host mounts for Windows compatibility
+  # For production Linux deployment, uncomment the volumes below
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
+      - '--path.procfs=/proc'
+      - '--path.sysfs=/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+    # Uncomment these volumes when deploying to Linux VM:
+    # volumes:
+    #   - /proc:/proc:ro
+    #   - /sys:/sys:ro
+    #   - /:/rootfs:ro
     ports:
       - "9100:9100"
     networks:
@@ -78,11 +80,11 @@ services:
 
   # MySQL Exporter - Database Metrics
   mysqld-exporter:
-    image: prom/mysqld-exporter:latest
+    image: prom/mysqld-exporter:v0.14.0
     container_name: mysqld-exporter
     restart: unless-stopped
     environment:
-      - DATA_SOURCE_NAME=root:rootpassword@tcp(database:3306)/
+      - DATA_SOURCE_NAME=root:rootpassword@(database:3306)/
     ports:
       - "9104:9104"
     networks:
