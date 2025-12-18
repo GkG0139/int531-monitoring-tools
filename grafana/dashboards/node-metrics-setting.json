@@ -149,13 +149,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+          "expr": "100 - (avg(irate(node_cpu_seconds_total{instance=\"$node\", mode=\"idle\"}[1m])) * 100)",
           "legendFormat": "CPU Used",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "CPU Utilization %",
+      "title": "CPU Utilization (%): $node",
       "type": "timeseries"
     },
     {
@@ -250,13 +250,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+          "expr": "100 * (1 - (node_memory_MemAvailable_bytes{instance=\"$node\"} / node_memory_MemTotal_bytes{instance=\"$node\"}))",
           "legendFormat": "Memory Used",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Memory Usage %",
+      "title": "Memory Usage (%): $node",
       "type": "timeseries"
     },
     {
@@ -301,9 +301,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
+          "calcs": ["mean"],
           "fields": "",
           "values": false
         },
@@ -319,13 +317,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "1000 *\r\nsum by (device) (rate(node_disk_read_time_seconds_total[1m]))\r\n/\r\nsum by (device) (rate(node_disk_reads_completed_total[1m]))\r\n",
-          "legendFormat": "Disk: {{device}}",
+          "expr": "1000 * sum by (device) (rate(node_disk_read_time_seconds_total{instance=\"$node\"}[1m])) / sum by (device) (rate(node_disk_reads_completed_total{instance=\"$node\"}[1m]))",
+          "legendFormat": "{{device}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Average Disk I/O Latency",
+      "title": "Average Disk I/O Latency: $node",
       "type": "stat"
     },
     {
@@ -421,13 +419,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(node_disk_io_time_seconds_total[1m]) * 100",
           "legendFormat": "Disk: {{device}}",
           "range": true,
+          "expr": "rate(node_disk_io_time_seconds_total{instance=\"$node\"}[1m]) * 100",
           "refId": "A"
         }
       ],
-      "title": "Disk I/O Utilization %",
+      "title": "Disk I/O Utilization (%): $node",
       "type": "timeseries"
     },
     {
@@ -523,9 +521,9 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_disk_read_bytes_total[1m])) by (instance)",
           "legendFormat": "Disk read",
           "range": true,
+          "expr": "sum(rate(node_disk_read_bytes_total{instance=\"$node\"}[1m])) by (device)",
           "refId": "A"
         },
         {
@@ -534,15 +532,15 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(node_disk_written_bytes_total[1m])) by (instance)",
           "hide": false,
           "instant": false,
           "legendFormat": "Disk write",
           "range": true,
+          "expr": "sum(rate(node_disk_written_bytes_total{instance=\"$node\"}[1m])) by (device)",
           "refId": "B"
         }
       ],
-      "title": "Disk Read/Write Throughput",
+      "title": "Disk Read/Write Throughput: $node",
       "type": "timeseries"
     },
     {
@@ -637,13 +635,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "(\r\n  sum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"})\r\n  -\r\n  sum(node_filesystem_free_bytes{fstype!~\"tmpfs|overlay\"})\r\n)\r\n/\r\nsum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"})\r\n* 100\r\n",
           "legendFormat": "{{label_name}}",
           "range": true,
+          "expr": "(sum(node_filesystem_size_bytes{instance=\"$node\", fstype!~\"tmpfs|overlay\"}) - sum(node_filesystem_free_bytes{instance=\"$node\", fstype!~\"tmpfs|overlay\"})) / sum(node_filesystem_size_bytes{instance=\"$node\", fstype!~\"tmpfs|overlay\"}) * 100",
           "refId": "A"
         }
       ],
-      "title": "Disk Used",
+      "title": "Disk Used (%): $node",
       "type": "timeseries"
     },
     {
@@ -732,7 +730,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total[1m])",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$node\"}[1m])",
           "legendFormat": "Device: {{device}}",
           "range": true,
           "refId": "A",
@@ -742,7 +740,7 @@
           }
         }
       ],
-      "title": "Network RX (MB/s)",
+      "title": "Network RX (MB/s): $node",
       "type": "timeseries"
     },
     {
@@ -831,7 +829,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total[1m])",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node\"}[1m])",
           "legendFormat": "Device: {{device}}",
           "range": true,
           "refId": "A",
@@ -841,7 +839,7 @@
           }
         }
       ],
-      "title": "Network TX (MB/s)",
+      "title": "Network TX (MB/s): $node",
       "type": "timeseries"
     }
   ],
@@ -850,7 +848,31 @@
   "schemaVersion": 42,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(node_cpu_seconds_total, instance)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Node",
+        "multi": false,
+        "name": "node",
+        "options": [],
+        "query": {
+          "query": "label_values(node_cpu_seconds_total, instance)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-5m",
@@ -860,7 +882,7 @@
   "timezone": "browser",
   "title": "Node Metrics",
   "uid": "admdp8l",
-  "version": 10,
+  "version": 11,
   "weekStart": "",
   "id": null
 }
