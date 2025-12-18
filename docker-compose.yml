@@ -66,7 +66,8 @@ services:
 
 networks:
   app-network:
-    driver: bridge
+    external: true
+    name: int531-monitoring-tools_app-network
 
 volumes:
   db_data:
