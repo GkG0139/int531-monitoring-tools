@@ -1,8 +1,8 @@
 package com.int531.services
 
+import com.int531.exceptions.IDCannotBeBlankException
+import com.int531.exceptions.TextCannotBeBlankException
 import com.int531.repositories.TextRepository
-import exceptions.IDCannotBeBlankException
-import exceptions.TextCannotBeBlankException
 import java.util.UUID
 
 class TextService(

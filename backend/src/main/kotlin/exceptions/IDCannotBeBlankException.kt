@@ -1,7 +1,3 @@
-package exceptions;
+package com.int531.exceptions
 
-public class IDCannotBeBlankException extends RuntimeException {
-    public IDCannotBeBlankException(String message) {
-        super(message);
-    }
-}
+class IDCannotBeBlankException(message: String?) : RuntimeException(message)

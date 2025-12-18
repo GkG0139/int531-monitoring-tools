@@ -1,7 +1,3 @@
-package exceptions;
+package com.int531.exceptions
 
-public class TextCannotBeBlankException extends RuntimeException {
-    public TextCannotBeBlankException(String message) {
-        super(message);
-    }
-}
+class TextCannotBeBlankException(message: String?) : RuntimeException(message)
