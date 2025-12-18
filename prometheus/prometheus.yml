@@ -2,8 +2,8 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'int531-monitoring'
-    environment: 'production'
+    cluster: "int531-monitoring"
+    environment: "production"
 
 # Alertmanager configuration
 alerting:
@@ -14,49 +14,47 @@ alerting:
 
 # Load alert rules
 rule_files:
-  - 'alert_rules.yml'
+  - "alert_rules.yml"
 
 # Scrape configurations
 scrape_configs:
   # Prometheus self-monitoring
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
       - targets:
-          - localhost:9090
+          - prometheus:9090
 
   # Node Exporter - System Metrics (CPU, RAM, Disk, Network)
-  - job_name: 'node-exporter'
+  - job_name: "node-exporter"
     static_configs:
       - targets:
-          - '10.13.104.61:9100'
-        labels:
-          service: 'host-system'
+          - host.docker.internal:9100
 
   # Backend Service - Application Metrics
-  - job_name: 'backend'
-    metrics_path: '/metrics-micrometer'
+  - job_name: "backend"
+    metrics_path: "/metrics-micrometer"
     scrape_interval: 10s
     static_configs:
       - targets:
           - backend:8080
         labels:
-          service: 'backend'
-          app: 'int531-backend'
+          service: "backend"
+          app: "int531-backend"
 
   # MySQL Database - Database Metrics
-  - job_name: 'mysql'
+  - job_name: "mysql"
     static_configs:
       - targets:
           - mysqld-exporter:9104
         labels:
-          service: 'database'
-          app: 'mysql'
+          service: "database"
+          app: "mysql"
 
   # Nginx Reverse Proxy - Frontend/Proxy Metrics
-  - job_name: 'nginx'
+  - job_name: "nginx"
     static_configs:
       - targets:
           - nginx-exporter:9113
         labels:
-          service: 'frontend'
-          app: 'nginx-proxy'
+          service: "frontend"
+          app: "nginx-proxy"
