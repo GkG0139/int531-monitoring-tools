@@ -34,7 +34,7 @@ services:
 
   # 3. Database: MySQL
   database:
-    image: mysql:8.0
+    image: mysql:5.7
     container_name: database
     restart: unless-stopped
     environment:
@@ -42,13 +42,14 @@ services:
       MYSQL_DATABASE: int531
     volumes:
       - db_data:/var/lib/mysql
+
     healthcheck:
-      test: [ 'CMD', 'mysqladmin', 'ping', '-h', 'localhost' ]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -prootpassword || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      database:
+      retries: 10
       start_period: 60s
+
     networks:
       - app-network
 
