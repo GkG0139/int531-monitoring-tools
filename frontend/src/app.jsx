@@ -1,30 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './index.css'; 
+import './index.css';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || '/api';
 
 function App() {
-  const [texts, setTexts] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [notes, setNotes] = useState([]);
+  const [newNote, setNewNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  // Fetch all texts on component mount
+  // Fetch all notes on component mount
   useEffect(() => {
-    fetchTexts();
+    fetchNotes();
   }, []);
 
-  const fetchTexts = async () => {
+  const fetchNotes = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await axios.get(`${BACKEND_URL}/texts`);
-      setTexts(response.data);
+      // Ensure we always set an array
+      const data = response.data;
+      setNotes(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to fetch texts:", err);
-      setError('Failed to load messages. Please check if backend is running.');
+      console.error("Failed to fetch notes:", err);
+      setError('Failed to load notes. Please check if backend is running.');
+      setNotes([]); // Reset to empty array on error
     } finally {
       setLoading(false);
     }
@@ -32,54 +38,104 @@ function App() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newNote.trim()) return;
 
     try {
       setError(null);
-      await axios.put(`${BACKEND_URL}/texts`, newMessage, {
-        headers: { 'Content-Type': 'text/plain' }
+      await axios.post(`${BACKEND_URL}/texts`, { text: newNote }, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      setNewMessage('');
-      setSuccessMessage('✓ Message created successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-      await fetchTexts();
+      setNewNote('');
+      showSuccess('✓ Note created successfully!');
+      await fetchNotes();
     } catch (err) {
-      console.error("Failed to create text:", err);
-      setError('Failed to create message.');
+      console.error("Failed to create note:", err);
+      setError('Failed to create note.');
     }
   };
 
-  const handleUpdate = (id) => {
-    alert(`⚠️ Update functionality not yet implemented in backend.\n\nMessage ID: ${id}\n\nThis feature requires backend to support UPDATE endpoint.`);
+  const handleEditStart = (note) => {
+    setEditingId(note.id);
+    setEditText(note.message);
   };
 
-  const handleDelete = (id) => {
-    alert(`⚠️ Delete functionality not yet implemented in backend.\n\nMessage ID: ${id}\n\nThis feature requires backend to support DELETE endpoint.`);
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const handleEditSave = async (id) => {
+    if (!editText.trim()) {
+      setError('Note cannot be empty.');
+      return;
+    }
+
+    try {
+      setError(null);
+      await axios.put(`${BACKEND_URL}/texts/${id}`, { text: editText }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      setEditingId(null);
+      setEditText('');
+      showSuccess('✓ Note updated successfully!');
+      await fetchNotes();
+    } catch (err) {
+      console.error("Failed to update note:", err);
+      setError('Failed to update note.');
+    }
+  };
+
+  const handleDeleteRequest = (note) => {
+    setDeleteConfirm(note);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      setError(null);
+      await axios.delete(`${BACKEND_URL}/texts/${deleteConfirm.id}`);
+      setDeleteConfirm(null);
+      showSuccess('✓ Note deleted successfully!');
+      await fetchNotes();
+    } catch (err) {
+      console.error("Failed to delete note:", err);
+      setError('Failed to delete note.');
+    }
+  };
+
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   return (
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>📝 Text Message Manager</h1>
-          <p className="subtitle">Create and manage your text messages</p>
+          <h1>🧠 My Memory Notes</h1>
+          <p className="subtitle">Capture your thoughts, preserve your memories</p>
         </header>
 
         {/* Create Form */}
         <div className="card create-section">
-          <h2>Create New Message</h2>
+          <h2>✨ Create New Memory</h2>
           <form onSubmit={handleCreate}>
             <div className="form-group">
               <textarea
                 className="textarea"
-                placeholder="Type your message here..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="What's on your mind? Write down your thoughts, ideas, or memories..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
                 rows="4"
               />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={!newMessage.trim()}>
-              ✨ Create Message
+            <button type="submit" className="btn btn-primary" disabled={!newNote.trim()}>
+              💾 Save Memory
             </button>
           </form>
           {successMessage && <div className="success-banner">{successMessage}</div>}
@@ -92,11 +148,11 @@ function App() {
           </div>
         )}
 
-        {/* Messages List */}
-        <div className="card messages-section">
+        {/* Notes List */}
+        <div className="card notes-section">
           <div className="section-header">
-            <h2>All Messages</h2>
-            <button className="btn btn-secondary" onClick={fetchTexts}>
+            <h2>📚 All Memories</h2>
+            <button className="btn btn-secondary" onClick={fetchNotes}>
               🔄 Refresh
             </button>
           </div>
@@ -104,44 +160,102 @@ function App() {
           {loading ? (
             <div className="loading">
               <div className="spinner"></div>
-              <p>Loading messages...</p>
+              <p>Loading your memories...</p>
             </div>
-          ) : texts.length === 0 ? (
+          ) : notes.length === 0 ? (
             <div className="empty-state">
-              <p>📭 No messages yet. Create your first message above!</p>
+              <p>📭 No memories yet. Create your first memory above!</p>
             </div>
           ) : (
-            <div className="messages-list">
-              {texts.map((text) => (
-                <div key={text.id} className="message-card">
-                  <div className="message-content">
-                    <div className="message-id">ID: {text.id.substring(0, 8)}...</div>
-                    <p className="message-text">{text.message}</p>
-                  </div>
-                  <div className="message-actions">
-                    <button 
-                      className="btn btn-edit"
-                      onClick={() => handleUpdate(text.id)}
-                      title="Edit (Not implemented)"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button 
-                      className="btn btn-delete"
-                      onClick={() => handleDelete(text.id)}
-                      title="Delete (Not implemented)"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
+            <div className="notes-list">
+              {notes.map((note) => (
+                <div key={note.id} className={`note-card ${editingId === note.id ? 'editing' : ''}`}>
+                  {editingId === note.id ? (
+                    // Edit Mode
+                    <>
+                      <div className="note-content">
+                        <textarea
+                          className="edit-textarea"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          rows="3"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="note-actions">
+                        <button
+                          className="btn btn-save"
+                          onClick={() => handleEditSave(note.id)}
+                        >
+                          ✓ Save
+                        </button>
+                        <button
+                          className="btn btn-cancel"
+                          onClick={handleEditCancel}
+                        >
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    // View Mode
+                    <>
+                      <div className="note-content">
+                        <div className="note-id">ID: {note.id.substring(0, 8)}...</div>
+                        <p className="note-text">{note.message}</p>
+                      </div>
+                      <div className="note-actions">
+                        <button
+                          className="btn btn-edit"
+                          onClick={() => handleEditStart(note)}
+                          title="Edit this memory"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn btn-delete"
+                          onClick={() => handleDeleteRequest(note)}
+                          title="Delete this memory"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* Delete Confirmation Dialog */}
+        {deleteConfirm && (
+          <div className="modal-overlay" onClick={handleDeleteCancel}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>🗑️ Delete Memory?</h3>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete this memory?</p>
+                <div className="delete-preview">
+                  <strong>"{deleteConfirm.message}"</strong>
+                </div>
+                <p className="warning-text">This action cannot be undone.</p>
+              </div>
+              <div className="modal-actions">
+                <button className="btn btn-cancel" onClick={handleDeleteCancel}>
+                  ✕ Cancel
+                </button>
+                <button className="btn btn-delete-confirm" onClick={handleDeleteConfirm}>
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <footer className="footer">
-          <p>INT531 - Monitoring Tools Project</p>
+          <p>INT531 - Memory Notes Project 🧠</p>
         </footer>
       </div>
     </div>

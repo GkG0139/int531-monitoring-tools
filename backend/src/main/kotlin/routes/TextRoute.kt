@@ -31,6 +31,18 @@ fun Route.textRoutes(textService: TextService) {
         }
     }
 
+    // PUT endpoint for creating new text (accepts plain text body)
+    // This maintains backward compatibility with frontend
+    put("/texts") {
+        try {
+            val text = call.receiveText()
+            textService.createText(text)
+            call.respond(HttpStatusCode.Created, "Text created")
+        } catch (e: TextCannotBeBlankException) {
+            call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid text")
+        }
+    }
+
     put("/texts/{id}") {
         try {
             val id = call.pathParameters["id"] ?: ""
