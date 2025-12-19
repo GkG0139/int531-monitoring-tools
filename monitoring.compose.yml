@@ -113,7 +113,7 @@ networks:
   monitoring:
     driver: bridge
   app-network:
-    name: int531-monitoring-tools_app-network
+    name: app-network
     external: true
 
 volumes:
