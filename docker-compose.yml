@@ -9,7 +9,7 @@ services:
     networks:
       - app-network
 
-  # 2. Backend: Spring Boot API
+  # 2. Backend: Ktor API
   backend:
     image: ghcr.io/gkg0139/int531-backend:latest
     container_name: backend
