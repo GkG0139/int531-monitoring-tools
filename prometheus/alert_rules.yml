@@ -2,140 +2,90 @@ groups:
   - name: int531_slo_alerts
     interval: 30s
     rules:
-      # ===== High Error Rate Alert (SLO: Error Rate < 1%) =====
-      - alert: HighErrorRate
-        expr: |
-          (
-            sum(rate(ktor_http_server_requests_seconds_count{status=~"5.."}[5m]))
-            /
-            sum(rate(ktor_http_server_requests_seconds_count[5m]))
-          ) > 0.01
-        for: 2m
-        labels:
-          severity: critical
-          service: backend
-          signal: errors
-        annotations:
-          summary: "High error rate detected on {{ $labels.service }}"
-          description: |
-            Alert Name: HighErrorRate
-            Expression (SLI): Error rate is {{ $value | humanizePercentage }} (threshold: 1%)
-            Duration: Alert fires after condition persists for 2 minutes
-            Details: The backend service is experiencing elevated 5xx error rates, indicating potential service degradation or failures.
-
-      # ===== High Latency Alert (SLO: P95 latency < 500ms) =====
-      - alert: HighLatency
-        expr: |
-          histogram_quantile(0.95, 
-            sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le)
-          ) > 0.5
-        for: 3m
-        labels:
-          severity: warning
-          service: backend
-          signal: latency
-        annotations:
-          summary: "High latency detected on {{ $labels.service }}"
-          description: |
-            Alert Name: HighLatency
-            Expression (SLI): P95 latency is {{ $value }}s (threshold: 0.5s)
-            Duration: Alert fires after condition persists for 3 minutes
-            Details: The 95th percentile response time has exceeded acceptable thresholds, users may experience slow responses.
-
-      # ===== High CPU Usage (Saturation) =====
-      - alert: HighCPUUsage
-        expr: |
-          100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-        for: 5m
-        labels:
-          severity: warning
-          service: host-system
-          signal: saturation
-        annotations:
-          summary: "High CPU usage detected"
-          description: |
-            Alert Name: HighCPUUsage
-            Expression (SLI): CPU usage is {{ $value | humanize }}% (threshold: 80%)
-            Duration: Alert fires after condition persists for 5 minutes
-            Details: System CPU utilization is critically high, which may impact application performance.
-
-      # ===== High Memory Usage (Saturation) =====
-      - alert: HighMemoryUsage
-        expr: |
-          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
-        for: 5m
-        labels:
-          severity: warning
-          service: host-system
-          signal: saturation
-        annotations:
-          summary: "High memory usage detected"
-          description: |
-            Alert Name: HighMemoryUsage
-            Expression (SLI): Memory usage is {{ $value | humanize }}% (threshold: 85%)
-            Duration: Alert fires after condition persists for 5 minutes
-            Details: System memory utilization is critically high, which may lead to OOM conditions.
-
-      # ===== Low Request Traffic (Traffic Signal) =====
-      - alert: LowTraffic
-        expr: |
-          sum(rate(ktor_http_server_requests_seconds_count[5m])) < 0.01
-        for: 10m
-        labels:
-          severity: info
-          service: backend
-          signal: traffic
-        annotations:
-          summary: "Low traffic detected on {{ $labels.service }}"
-          description: |
-            Alert Name: LowTraffic
-            Expression (SLI): Request rate is {{ $value }} req/s (threshold: < 0.01 req/s)
-            Duration: Alert fires after condition persists for 10 minutes
-            Details: The backend service is receiving unusually low traffic, which may indicate connectivity issues or upstream problems.
-
-      # ===== Service Down Alert =====
       - alert: ServiceDown
         expr: up{job="backend"} == 0
         for: 1m
         labels:
           severity: critical
           service: backend
+          group: "int531_Group_Phuri"
         annotations:
-          summary: "Backend service is down"
-          description: |
-            Alert Name: ServiceDown
-            Expression (SLI): Service health check failed (up == 0)
-            Duration: Alert fires after condition persists for 1 minute
-            Details: The backend service is not responding to health checks and appears to be completely unavailable.
+          summary: "Backend service is DOWN on {{ $labels.instance }}"
+          description: "Alert: ServiceDown\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): Service health check failed (up == 0)"
 
-      # ===== Database Connection Issues =====
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le, instance)) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          service: backend
+          group: "int531_Group_Phuri"
+        annotations:
+          summary: "High latency on {{ $labels.instance }}"
+          description: "Alert: HighLatency\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): P95 latency is {{ $value }}s (threshold: 0.5s)"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle", job="node-exporter"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: host-system
+          group: "int531_Group_Phuri"
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "Alert: HighCPUUsage\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): CPU usage is {{ $value | humanize }}%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: host-system
+          group: "int531_Group_Phuri"
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Alert: HighMemoryUsage\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): Memory usage is {{ $value | humanize }}%"
+
+      - alert: LowTraffic
+        expr: sum(rate(ktor_http_server_requests_seconds_count[5m])) by (instance) < 0.01
+        for: 10m
+        labels:
+          severity: info
+          service: backend
+          group: "int531_Group_Phuri"
+        annotations:
+          summary: "Low traffic on {{ $labels.instance }}"
+          description: "Alert: LowTraffic\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): Request rate is {{ $value }} req/s"
+
+      - alert: ServiceDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+          group: "int531_Group_Phuri"
+        annotations:
+          summary: "Backend service is DOWN on {{ $labels.instance }}"
+          description: "Alert: ServiceDown\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): Service health check failed (up == 0)"
+
       - alert: DatabaseDown
         expr: up{job="mysql"} == 0
         for: 1m
         labels:
           severity: critical
           service: database
+          group: "int531_Group_Phuri"
         annotations:
-          summary: "MySQL database is unreachable"
-          description: |
-            Alert Name: DatabaseDown
-            Expression (SLI): MySQL exporter cannot connect (up == 0)
-            Duration: Alert fires after condition persists for 1 minute
-            Details: The MySQL database is not accessible, which will cause application failures.
+          summary: "MySQL database is unreachable on {{ $labels.instance }}"
+          description: "Alert: DatabaseDown\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): MySQL exporter cannot connect (up == 0)"
 
-      # ===== Disk Space Warning =====
       - alert: DiskSpaceLow
-        expr: |
-          (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/", job="node-exporter"} / node_filesystem_size_bytes{mountpoint="/", job="node-exporter"})) * 100 > 80
         for: 5m
         labels:
           severity: warning
           service: host-system
-          signal: saturation
+          group: "int531_Group_Phuri"
         annotations:
-          summary: "Disk space running low"
-          description: |
-            Alert Name: DiskSpaceLow
-            Expression (SLI): Disk usage is {{ $value | humanize }}% (threshold: 80%)
-            Duration: Alert fires after condition persists for 5 minutes
-            Details: Available disk space is critically low, which may cause service failures if logs or data cannot be written.
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Alert: DiskSpaceLow\nGroup: {{ $labels.group }}\nTarget IP: {{ $labels.instance }}\nExpression (SLI): Disk usage is {{ $value | humanize }}%"
