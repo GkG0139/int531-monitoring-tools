@@ -37,9 +37,17 @@ scrape_configs:
     static_configs:
       - targets:
           - backend:8080
-        labels:
-          service: "backend"
-          app: "int531-backend"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "int531-backend"
+
+      # Optional: explicit service label
+      - target_label: service
+        replacement: "backend"
+
+      - target_label: app
+        replacement: "int531-backend"
 
   # MySQL Database - Database Metrics
   - job_name: "mysql"
