@@ -31,7 +31,7 @@
       },
       "id": 103,
       "panels": [],
-      "title": "💻 System Saturation (CPU, Memory, Disk)",
+      "title": "\ud83d\udcbb System Saturation (CPU, Memory, Disk)",
       "type": "row"
     },
     {
@@ -344,7 +344,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
+          "expr": "(sum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"}) - sum(node_filesystem_free_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"})) / sum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"}) * 100",
           "legendFormat": "Disk Usage",
           "refId": "A"
         }
@@ -362,7 +362,7 @@
       },
       "id": 102,
       "panels": [],
-      "title": "📊 Detailed Metrics - Traffic & Errors",
+      "title": "\ud83d\udcca Detailed Metrics - Traffic & Errors",
       "type": "row"
     },
     {
@@ -619,7 +619,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
+          "expr": "((sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
           "legendFormat": "Error Rate (5xx)",
           "refId": "A"
         }
@@ -637,7 +637,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "📊 Four Golden Signals - INT531 SRE Monitoring",
+      "title": "\ud83d\udcca Four Golden Signals - INT531 SRE Monitoring",
       "type": "row"
     },
     {
@@ -646,11 +646,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 19
       },
       "id": 200,
       "panels": [],
-      "title": "📱 Frontend - Four Golden Signals (Nginx)",
+      "title": "\ud83d\udcf1 Frontend - Four Golden Signals (Nginx)",
       "type": "row"
     },
     {
@@ -690,7 +690,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 19
+        "y": 20
       },
       "id": 210,
       "options": {
@@ -720,7 +720,7 @@
           "refId": "A"
         }
       ],
-      "title": "🕐 Latency (Frontend→Backend P95)",
+      "title": "\ud83d\udd50 Latency (Frontend\u2192Backend P95)",
       "type": "gauge"
     },
     {
@@ -760,7 +760,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 1
+        "y": 20
       },
       "id": 201,
       "options": {
@@ -790,7 +790,7 @@
           "refId": "A"
         }
       ],
-      "title": "📈 Traffic (Frontend Requests/sec)",
+      "title": "\ud83d\udcc8 Traffic (Frontend Requests/sec)",
       "type": "gauge"
     },
     {
@@ -830,7 +830,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 1
+        "y": 20
       },
       "id": 202,
       "options": {
@@ -860,7 +860,7 @@
           "refId": "A"
         }
       ],
-      "title": "⚡ Saturation (Active Connections)",
+      "title": "\u26a1 Saturation (Active Connections)",
       "type": "gauge"
     },
     {
@@ -902,7 +902,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 20
       },
       "id": 203,
       "options": {
@@ -932,7 +932,7 @@
           "refId": "A"
         }
       ],
-      "title": "✅ Connection Success Rate %",
+      "title": "\u2705 Connection Success Rate %",
       "type": "gauge"
     },
     {
@@ -1006,7 +1006,7 @@
           "refId": "A"
         }
       ],
-      "title": "⏳ Keep-Alive Connections (Waiting)",
+      "title": "\u23f3 Keep-Alive Connections (Waiting)",
       "type": "stat"
     },
     {
@@ -1015,11 +1015,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 36
       },
       "id": 205,
       "panels": [],
-      "title": "📊 Frontend Detailed Metrics",
+      "title": "\ud83d\udcca Frontend Detailed Metrics",
       "type": "row"
     },
     {
@@ -1085,7 +1085,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 37
       },
       "id": 211,
       "options": {
@@ -1134,7 +1134,7 @@
           "refId": "C"
         }
       ],
-      "title": "Frontend→Backend Latency Percentiles",
+      "title": "Frontend\u2192Backend Latency Percentiles",
       "type": "timeseries"
     },
     {
@@ -1204,7 +1204,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 37
       },
       "id": 212,
       "options": {
@@ -1235,7 +1235,7 @@
           "refId": "A"
         }
       ],
-      "title": "Frontend→Backend Average Response Time",
+      "title": "Frontend\u2192Backend Average Response Time",
       "type": "timeseries"
     },
     {
@@ -1297,7 +1297,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 45
       },
       "id": 206,
       "options": {
@@ -1435,7 +1435,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 45
       },
       "id": 207,
       "options": {
@@ -1553,7 +1553,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 53
       },
       "id": 208,
       "options": {
@@ -1676,7 +1676,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 53
       },
       "id": 209,
       "options": {
@@ -1755,7 +1755,7 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 1
+        "y": 61
       },
       "id": 2,
       "options": {
@@ -1781,7 +1781,7 @@
           "refId": "A"
         }
       ],
-      "title": "📈 Traffic (Requests/sec)",
+      "title": "\ud83d\udcc8 Traffic (Requests/sec)",
       "type": "gauge"
     },
     {
@@ -1823,7 +1823,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 1
+        "y": 61
       },
       "id": 3,
       "options": {
@@ -1849,7 +1849,7 @@
           "refId": "A"
         }
       ],
-      "title": "❌ Errors (5xx Error Rate %)",
+      "title": "\u274c Errors (5xx Error Rate %)",
       "type": "gauge"
     },
     {
@@ -1891,7 +1891,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 61
       },
       "id": 4,
       "options": {
@@ -1918,7 +1918,7 @@
           "refId": "A"
         }
       ],
-      "title": "⚡ Saturation (CPU Usage %)",
+      "title": "\u26a1 Saturation (CPU Usage %)",
       "type": "gauge"
     },
     {
@@ -1927,11 +1927,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 69
       },
       "id": 105,
       "panels": [],
-      "title": "💽 Backend",
+      "title": "\ud83d\udcbd Backend",
       "type": "row"
     },
     {
@@ -2001,7 +2001,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 37
+        "y": 70
       },
       "id": 106,
       "options": {
@@ -2027,7 +2027,7 @@
           "refId": "A"
         }
       ],
-      "title": "Latency – p95 by Route",
+      "title": "Latency \u2013 p95 by Route",
       "type": "timeseries"
     },
     {
@@ -2099,7 +2099,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 37
+        "y": 70
       },
       "id": 107,
       "options": {
@@ -2211,7 +2211,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 45
+        "y": 78
       },
       "id": 110,
       "options": {
@@ -2307,7 +2307,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 53
+        "y": 86
       },
       "id": 109,
       "options": {
@@ -2402,7 +2402,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 53
+        "y": 86
       },
       "id": 111,
       "options": {
@@ -2500,7 +2500,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 61
+        "y": 94
       },
       "id": 112,
       "options": {
@@ -2523,7 +2523,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
+          "expr": "(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100",
           "legendFormat": "Disk Usage",
           "refId": "A"
         }
@@ -2537,11 +2537,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 102
       },
       "id": 104,
       "panels": [],
-      "title": "🗄️ Database & Infrastructure Metrics",
+      "title": "\ud83d\uddc4\ufe0f Database & Infrastructure Metrics",
       "type": "row"
     },
     {
@@ -2606,7 +2606,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 70
+        "y": 103
       },
       "id": 40,
       "options": {
@@ -2711,7 +2711,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 70
+        "y": 103
       },
       "id": 41,
       "options": {
