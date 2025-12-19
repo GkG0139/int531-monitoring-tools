@@ -36,10 +36,24 @@
       "type": "row"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 200,
+      "panels": [],
+      "title": "📱 Frontend - Four Golden Signals (Nginx)",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This?**\nLatency is critical for user experience. High latency indicates performance issues that directly impact user satisfaction. This measures the end-to-end request latency from the frontend proxy to backend.\n\n**What It Measures:**\nP95 response time of requests proxied through Nginx to the backend. This represents the latency experienced by 95% of users.\n\n**Note:** Standard nginx-exporter (stub_status) doesn't provide latency metrics, so we measure the backend response time which reflects the total latency from Nginx's perspective.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -71,9 +85,9 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 1
+        "y": 2
       },
-      "id": 1,
+      "id": 210,
       "options": {
         "orientation": "auto",
         "reduceOptions": {
@@ -93,11 +107,12 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le))",
+          "expr": "max(ktor_http_server_requests_seconds{quantile='0.95'}) or vector(0)",
+          "legendFormat": "P95 Latency",
           "refId": "A"
         }
       ],
-      "title": "🕐 Latency (P95 Response Time)",
+      "title": "🕐 Latency (Frontend→Backend P95)",
       "type": "gauge"
     },
     {
@@ -105,6 +120,981 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This?**\nRequest rate indicates user traffic patterns and helps identify traffic spikes or drops. This is crucial for capacity planning and detecting anomalies in user behavior.\n\n**What It Measures:**\nTotal HTTP requests per second handled by Nginx frontend proxy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 2
+      },
+      "id": 201,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_http_requests_total[5m])",
+          "legendFormat": "Frontend Traffic",
+          "refId": "A"
+        }
+      ],
+      "title": "📈 Traffic (Frontend Requests/sec)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nActive connections show current load on the frontend. High active connections can indicate capacity issues or the need to scale. This helps predict when resources will be exhausted.\n\n**What It Measures:**\nCurrent number of active client connections to Nginx, including connections that are reading, writing, or waiting.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 2
+      },
+      "id": 202,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_active",
+          "legendFormat": "Active Connections",
+          "refId": "A"
+        }
+      ],
+      "title": "⚡ Saturation (Active Connections)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nAccepted vs handled connection ratio reveals if Nginx is dropping connections due to resource limits. Drops indicate saturation and potential user experience issues.\n\n**What It Measures:**\nTotal number of accepted and handled connections. Difference between accepted and handled indicates dropped connections.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 2
+      },
+      "id": 203,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(nginx_connections_handled[5m]) / rate(nginx_connections_accepted[5m])) * 100",
+          "legendFormat": "Connection Success Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "✅ Connection Success Rate %",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nWaiting connections reveal important insights about your frontend's keep-alive configuration and connection management:\n\n**1. Keep-Alive Efficiency:** Idle connections waiting for the next request indicate that HTTP keep-alive is working. This reduces latency by reusing connections.\n\n**2. Connection Pool Health:** The ratio of waiting vs. active connections shows efficiency. Too many waiting connections may indicate:\n   - Misconfigured keep-alive timeout (too long)\n   - Connection leaks\n   - Need to tune worker_connections limits\n\n**3. Resource Planning:** Each idle connection consumes memory. Monitor trends to optimize keep-alive settings for balance between performance and resource usage.\n\n**4. Anomaly Detection:** Sudden spikes in waiting connections may indicate slow clients, DDoS attempts, or application issues.\n\n**What It Measures:**\n- **Waiting Connections:** Idle keep-alive connections waiting for next request\n- **Trend:** Sparkline shows changes over time\n- **Efficiency:** Percentage shown indicates connection reuse rate\n\n**Healthy Range:** 0-50 is normal; >100 may need investigation.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "orange",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 11
+      },
+      "id": 204,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "showPercentChange": false
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_waiting",
+          "legendFormat": "Waiting Connections",
+          "refId": "A"
+        }
+      ],
+      "title": "⏳ Keep-Alive Connections (Waiting)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 205,
+      "panels": [],
+      "title": "📊 Frontend Detailed Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nTracking latency percentiles over time helps identify performance degradation trends and the impact on different user segments. P50 shows typical experience, P95/P99 show worst-case scenarios.\n\n**What It Measures:**\nFrontend (Nginx) to Backend (Ktor) response time percentiles:\n- P50: Median user experience\n- P95: 95% of requests complete within this time\n- P99: 99% of requests (catches outliers)\n\n**Note:** Measures backend response time as seen from Nginx proxy.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 211,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "ktor_http_server_requests_seconds{quantile='0.5'} or vector(0)",
+          "legendFormat": "P50 (Median)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "ktor_http_server_requests_seconds{quantile='0.95'} or vector(0)",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "ktor_http_server_requests_seconds{quantile='0.99'} or vector(0)",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "title": "Frontend→Backend Latency Percentiles",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nAverage response time provides a simple overall health indicator. Sudden increases indicate performance issues affecting all users.\n\n**What It Measures:**\nAverage (mean) response time for requests proxied through Nginx to the backend. This is the total request processing time from Nginx's perspective.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 212,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(ktor_http_server_requests_seconds_sum[5m])) / sum(rate(ktor_http_server_requests_seconds_count[5m]))",
+          "legendFormat": "Average Response Time",
+          "refId": "A"
+        }
+      ],
+      "title": "Frontend→Backend Average Response Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nTrends in request rate help identify patterns, predict capacity needs, and detect anomalies like DDoS attacks or traffic drops due to outages.\n\n**What It Measures:**\nHTTP request rate over time from Nginx.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 206,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_http_requests_total[5m])",
+          "legendFormat": "Request Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "Frontend Request Rate Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nConnection state distribution reveals bottlenecks. High 'reading' suggests slow clients, high 'writing' indicates slow responses or large payloads, high 'waiting' shows keep-alive usage.\n\n**What It Measures:**\n- Reading: Connections reading request headers\n- Writing: Connections sending responses to clients\n- Waiting: Idle keep-alive connections",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reading"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Writing"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Waiting"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 207,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_reading",
+          "legendFormat": "Reading",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_writing",
+          "legendFormat": "Writing",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_waiting",
+          "legendFormat": "Waiting",
+          "refId": "C"
+        }
+      ],
+      "title": "Connection States (Reading/Writing/Waiting)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nActive connections trend indicates overall system load and helps with capacity planning. Sudden spikes may indicate attacks or viral traffic.\n\n**What It Measures:**\nTotal active connections to Nginx frontend over time.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 208,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "nginx_connections_active",
+          "legendFormat": "Active Connections",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Connections Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This?**\nComparing accepted vs handled connections reveals if Nginx is operating at capacity. Dropped connections (accepted - handled) indicate resource exhaustion requiring immediate attention.\n\n**What It Measures:**\n- Accepted: Total connections accepted by Nginx\n- Handled: Total connections successfully handled\n- Gap indicates dropped connections",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "cps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Accepted"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Handled"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 209,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_connections_accepted[5m])",
+          "legendFormat": "Accepted",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_connections_handled[5m])",
+          "legendFormat": "Handled",
+          "refId": "B"
+        }
+      ],
+      "title": "Accepted vs Handled Connections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nTraffic is one of the Four Golden Signals and a critical SRE metric. Monitoring request rate helps:\n\n**1. Capacity Planning:** Understand current load to predict when scaling is needed before saturation occurs.\n\n**2. Anomaly Detection:** Sudden drops indicate outages or upstream failures; unexpected spikes may signal DDoS attacks or viral events.\n\n**3. SLO/SLI Tracking:** Traffic volume is essential context for interpreting error rates and latency (errors/traffic = error rate).\n\n**4. Business Metrics:** Request rate correlates with user activity and business health.\n\n**What It Measures:**\nTotal number of HTTP requests per second handled by the backend API.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -170,6 +1160,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nErrors are one of the Four Golden Signals and directly impact reliability and user trust. Monitoring error rates is critical for:\n\n**1. SLO/SLI Measurement:** Error rate is typically the most important SLO (e.g., \"99.9% of requests succeed\"). Breaching error budgets triggers incident response.\n\n**2. Rapid Incident Detection:** Spikes in 5xx errors indicate backend failures requiring immediate investigation.\n\n**3. User Experience:** Every error affects users and may cause data loss, failed transactions, or poor perception.\n\n**4. Change Validation:** Monitor error rates during deployments to catch regressions quickly.\n\n**What It Measures:**\nPercentage of requests returning 5xx server errors (failures caused by backend issues).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -225,7 +1216,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
+          "expr": "((sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
           "refId": "A"
         }
       ],
@@ -237,6 +1228,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nSaturation is one of the Four Golden Signals and indicates how \"full\" your service is. CPU saturation monitoring is essential for:\n\n**1. Preventing Cascading Failures:** High CPU usage causes increased latency, timeouts, and eventually service crashes. Early detection prevents outages.\n\n**2. Capacity Planning:** Trend analysis shows when additional resources are needed before users are impacted.\n\n**3. Cost Optimization:** Right-sizing infrastructure based on actual utilization prevents over-provisioning.\n\n**4. Performance Baseline:** Abnormal CPU spikes indicate inefficient code, memory leaks, or unexpected workloads.\n\n**What It Measures:**\nCPU utilization percentage (100% - idle time) across all cores.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -306,221 +1298,6 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
-      },
-      "id": 101,
-      "panels": [],
-      "title": "📉 Detailed Metrics - Latency",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 10
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "histogram_quantile(0.50, sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P50 (Median)",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "histogram_quantile(0.95, sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P95",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "histogram_quantile(0.99, sum(rate(ktor_http_server_requests_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P99",
-          "refId": "C"
-        }
-      ],
-      "title": "Response Time Percentiles",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 0.5
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 10
-      },
-      "id": 11,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(rate(ktor_http_server_requests_seconds_sum[5m])) / sum(rate(ktor_http_server_requests_seconds_count[5m]))",
-          "legendFormat": "Average Response Time",
-          "refId": "A"
-        }
-      ],
-      "title": "Average Response Time",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
         "y": 18
       },
       "id": 102,
@@ -533,6 +1310,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nBreaking down traffic by status code provides actionable insights for SRE work:\n\n**1. Incident Triage:** Quickly distinguish between client errors (4xx - user/config issues) and server errors (5xx - backend failures) to focus response efforts.\n\n**2. Deployment Validation:** Compare status code distribution before/after deployments to detect regressions.\n\n**3. Capacity Analysis:** High 2xx volume with low latency indicates healthy capacity; high 2xx with high latency suggests approaching limits.\n\n**4. Security Monitoring:** Unusual patterns in 4xx errors may indicate attacks (e.g., high 401/403 from authentication failures).\n\n**What It Measures:**\nRequest rate over time broken down by HTTP status code categories (2xx success, 4xx client errors, 5xx server errors).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -674,7 +1452,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m]))",
+          "expr": "sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)",
           "legendFormat": "5xx (Server Error)",
           "refId": "C"
         }
@@ -687,6 +1465,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This? (SRE Perspective)**\n\nError rate percentage directly maps to service reliability and SLOs:\n\n**1. SLO Monitoring:** Most services have error rate SLOs (e.g., \"99.9% success rate\"). This panel shows if you're meeting that target or burning through error budget.\n\n**2. Alerting Threshold:** The 1% threshold shown is a common SLO target. Sustained breaches require immediate investigation.\n\n**3. Incident Detection:** Even small increases in error rate can indicate serious problems affecting many users.\n\n**4. Postmortem Data:** Historical error rate data is crucial for incident analysis and identifying patterns.\n\n**What It Measures:**\nPercentage of total requests that result in 5xx server errors. SLO threshold of <1% is marked.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -770,7 +1549,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
+          "expr": "((sum(rate(ktor_http_server_requests_seconds_count{status=~\"5..\"}[5m])) or vector(0)) / sum(rate(ktor_http_server_requests_seconds_count[5m]))) * 100",
           "legendFormat": "Error Rate (5xx)",
           "refId": "A"
         }
@@ -1083,8 +1862,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
-          "legendFormat": "Disk Usage",
+          "expr": "(sum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"}) - sum(node_filesystem_free_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"})) / sum(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|devtmpfs\"}) * 100",
+          "legendFormat": "Disk Usage (/)",
           "refId": "A"
         }
       ],
