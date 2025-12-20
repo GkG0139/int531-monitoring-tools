@@ -5,51 +5,40 @@ global:
     cluster: "int531-monitoring"
     environment: "production"
 
-# Alertmanager configuration
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
             - alertmanager:9093
 
-# Load alert rules
 rule_files:
   - "alert_rules.yml"
 
-# Scrape configurations
 scrape_configs:
-  # Prometheus self-monitoring
   - job_name: "prometheus"
     static_configs:
       - targets:
           - prometheus:9090
 
-  # Node Exporter - System Metrics (CPU, RAM, Disk, Network)
   - job_name: "node-exporter"
     static_configs:
       - targets:
           - host.docker.internal:9100
 
-  # Backend Service - Application Metrics
+  # Backend Service - ใช้ IP จริง 10.13.104.61
   - job_name: "backend"
     metrics_path: "/metrics-micrometer"
     scrape_interval: 10s
     static_configs:
       - targets:
-          - backend:8080
+          - "10.13.104.61:8080"
     relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        replacement: "int531-backend"
-
-      # Optional: explicit service label
+      # ลบส่วน instance: "int531-backend" ออกเพื่อให้โชว์ IP จริง
       - target_label: service
         replacement: "backend"
-
       - target_label: app
         replacement: "int531-backend"
 
-  # MySQL Database - Database Metrics
   - job_name: "mysql"
     static_configs:
       - targets:
@@ -58,7 +47,6 @@ scrape_configs:
           service: "database"
           app: "mysql"
 
-  # Nginx Reverse Proxy - Frontend/Proxy Metrics
   - job_name: "nginx"
     static_configs:
       - targets:
