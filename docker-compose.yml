@@ -34,7 +34,7 @@ services:
 
   # 3. Database: MySQL
   database:
-    image: mysql:latest
+    image: mysql:5.7
     container_name: database
     restart: unless-stopped
     environment:
