@@ -1449,6 +1449,144 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "**Why Monitor This?**\nComparing accepted vs handled connections reveals if Nginx is operating at capacity. Dropped connections (accepted - handled) indicate resource exhaustion requiring immediate attention.\n\n**What It Measures:**\n- Accepted: Total connections accepted by Nginx\n- Handled: Total connections successfully handled\n- Gap indicates dropped connections",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "cps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Accepted"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Handled"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 53
+      },
+      "id": 209,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_connections_accepted[5m])",
+          "legendFormat": "Accepted",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(nginx_connections_handled[5m])",
+          "legendFormat": "Handled",
+          "refId": "B"
+        }
+      ],
+      "title": "Accepted vs Handled Connections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "**Why Monitor This?**\nConnection state distribution reveals bottlenecks. High 'reading' suggests slow clients, high 'writing' indicates slow responses or large payloads, high 'waiting' shows keep-alive usage.\n\n**What It Measures:**\n- Reading: Connections reading request headers\n- Writing: Connections sending responses to clients\n- Waiting: Idle keep-alive connections",
       "fieldConfig": {
         "defaults": {
@@ -1611,144 +1749,6 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "**Why Monitor This?**\nComparing accepted vs handled connections reveals if Nginx is operating at capacity. Dropped connections (accepted - handled) indicate resource exhaustion requiring immediate attention.\n\n**What It Measures:**\n- Accepted: Total connections accepted by Nginx\n- Handled: Total connections successfully handled\n- Gap indicates dropped connections",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "cps"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Accepted"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Handled"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 6,
-        "y": 61
-      },
-      "id": 209,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "rate(nginx_connections_accepted[5m])",
-          "legendFormat": "Accepted",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "rate(nginx_connections_handled[5m])",
-          "legendFormat": "Handled",
-          "refId": "B"
-        }
-      ],
-      "title": "Accepted vs Handled Connections",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
       "description": "**Why Monitor This? (SRE Perspective)**\n\nTraffic is one of the Four Golden Signals and a critical SRE metric. Monitoring request rate helps:\n\n**1. Capacity Planning:** Understand current load to predict when scaling is needed before saturation occurs.\n\n**2. Anomaly Detection:** Sudden drops indicate outages or upstream failures; unexpected spikes may signal DDoS attacks or viral events.\n\n**3. SLO/SLI Tracking:** Traffic volume is essential context for interpreting error rates and latency (errors/traffic = error rate).\n\n**4. Business Metrics:** Request rate correlates with user activity and business health.\n\n**What It Measures:**\nTotal number of HTTP requests per second handled by the backend API.",
       "fieldConfig": {
         "defaults": {
@@ -1781,7 +1781,7 @@
         "h": 8,
         "w": 6,
         "x": 3,
-        "y": 69
+        "y": 61
       },
       "id": 2,
       "options": {
@@ -1852,7 +1852,7 @@
         "h": 8,
         "w": 6,
         "x": 9,
-        "y": 69
+        "y": 61
       },
       "id": 3,
       "options": {
@@ -1923,7 +1923,7 @@
         "h": 8,
         "w": 6,
         "x": 15,
-        "y": 69
+        "y": 61
       },
       "id": 4,
       "options": {
@@ -1962,7 +1962,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 77
+        "y": 69
       },
       "id": 105,
       "panels": [],
@@ -2017,7 +2017,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 78
+        "y": 70
       },
       "id": 213,
       "options": {
@@ -2117,7 +2117,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 78
+        "y": 70
       },
       "id": 106,
       "options": {
@@ -2215,7 +2215,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 86
+        "y": 78
       },
       "id": 107,
       "options": {
@@ -2313,7 +2313,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 86
+        "y": 78
       },
       "id": 112,
       "options": {
@@ -2411,7 +2411,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 94
+        "y": 86
       },
       "id": 109,
       "options": {
@@ -2505,7 +2505,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 94
+        "y": 86
       },
       "id": 110,
       "options": {
@@ -2602,7 +2602,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 94
       },
       "id": 111,
       "options": {
@@ -2637,7 +2637,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 110
+        "y": 102
       },
       "id": 104,
       "panels": [],
@@ -2706,7 +2706,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 111
+        "y": 103
       },
       "id": 40,
       "options": {
@@ -2811,7 +2811,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 111
+        "y": 103
       },
       "id": 41,
       "options": {
