@@ -121,6 +121,7 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+      - app-network
 
 networks:
   monitoring:
