@@ -25,17 +25,17 @@ scrape_configs:
       - targets:
           - host.docker.internal:9100
 
-  # Backend Service - ใช้ IP จริง 10.13.104.61
   - job_name: "backend"
     metrics_path: "/metrics-micrometer"
     scrape_interval: 10s
     static_configs:
       - targets:
-          - "10.13.104.61:8080"
+          - backend:8080
     relabel_configs:
-      # ลบส่วน instance: "int531-backend" ออกเพื่อให้โชว์ IP จริง
+      - target_label: instance
+        replacement: "int531-backend"
       - target_label: service
-        replacement: "backend"
+        replacement: "int531-backend"
       - target_label: app
         replacement: "int531-backend"
 
@@ -54,3 +54,19 @@ scrape_configs:
         labels:
           service: "frontend"
           app: "nginx-proxy"
+
+  - job_name: "blackbox-health"
+    metrics_path: /probe
+    params:
+      module: [http_health]
+    static_configs:
+      - targets:
+          - http://backend:8080/health
+          - http://frontend:3000/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
