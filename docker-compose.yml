@@ -24,7 +24,7 @@ services:
       database:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -34,7 +34,7 @@ services:
 
   # 3. Database: MySQL
   database:
-    image: mysql:latest
+    image: mysql:5.7
     container_name: database
     restart: unless-stopped
     environment:
@@ -51,7 +51,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 60s
     networks:
       - app-network
 
@@ -71,8 +71,7 @@ services:
 
 networks:
   app-network:
-    name: app-network
-    driver: bridge
+    external: true
 
 volumes:
   db_data:
