@@ -1,3 +1,4 @@
+version: "3.9"
 services:
   # 1. Frontend: สร้างจาก Dockerfile (React/Vite)
   frontend:
